@@ -1,12 +1,14 @@
 package pl.nluk;
 
 import java.util.Comparator;
+import java.util.Random;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class BST<T> {
 
+    private static final Random r = new Random();
     private static final Visitor<?> NO_OP = (n)->{};
 
     Comparator<T> comparator;
@@ -73,21 +75,86 @@ public class BST<T> {
         return find(value, (Visitor<T>) NO_OP);
     }
 
-    private T traverseDirection(Function<Node<T>, Node<T>> moveTo){
-        if(root == null) return null;
-        Node<T> currentNode = root;
+    private Node<T> predecessor(Node<T> from){
+        if(from.getLeft() != null){
+            return maxNode(from.getLeft());
+        }
+        Node<T> y;
+        do {
+            y = from;
+            from = from.getParent();
+        }while (from != null && (from.getRight() != y));
+
+        return from;
+    }
+
+    private Node<T> successor(Node<T> from){
+        if(from.getRight() != null){
+            return minNode(from.getRight());
+        }
+        Node<T> y;
+        do {
+            y = from;
+            from = from.getParent();
+        }while (from != null && (from.getLeft() != y));
+        return from;
+    }
+
+    private Node<T> remove(Node<T> x){
+        Node<T> z = null;
+        Node<T> y = x.getParent();
+        if(x.getLeft() != null && x.getRight() != null){
+            z = r.nextBoolean() ? remove(predecessor(x)) : remove(successor(x));
+            z.setLeft(x.getLeft());
+            if(z.getLeft() != null){
+                z.getLeft().setParent(z);
+            }
+            z.setRight(x.getRight());
+            if(z.getRight() != null){
+                z.getRight().setParent(z);
+            }
+        }
+        else {
+            z = (x.getLeft() != null) ? x.getLeft() : x.getRight();
+        }
+        if(z != null){
+            z.setParent(y);
+        }
+        if(y == null){
+            root = z;
+        }
+        else if(y.getLeft() == x){
+            y.setLeft(z);
+        }
+        else {
+            y.setRight(z);
+        }
+        return x;
+    }
+
+    private Node<T> traverseDirection(Node<T> from, Function<Node<T>, Node<T>> moveTo){
+        if(from == null) return null;
+        Node<T> currentNode = from;
         while (moveTo.apply(currentNode) != null){
             currentNode = moveTo.apply(currentNode);
         }
-        return currentNode.getValue();
+        return currentNode;
     }
 
-    public T min(){
-        return traverseDirection(Node::getLeft);
+    public Node<T> minNode(){
+        return traverseDirection(root ,Node::getLeft);
     }
 
-    public T max(){
-        return traverseDirection(Node::getRight);
+    public Node<T> maxNode(){
+        return traverseDirection(root, Node::getRight);
+    }
+
+    public Node<T> minNode(Node<T> from){
+        return traverseDirection(from ,Node::getLeft);
+    }
+
+    public Node<T> maxNode(Node<T> from){
+        return traverseDirection(from, Node::getRight);
     }
 
     private void visitInorder(Visitor<T> visitor, Node<T> from){
