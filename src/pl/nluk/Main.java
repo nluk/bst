@@ -7,10 +7,11 @@ public class Main {
     static StringBuilderVisitor<Integer> stringBuilderVisitor = new StringBuilderVisitor<>();
 
     public static void main(String[] args) {
-        Collection<Integer> randomInts = uniqueIntegers(10, 30);
+        Collection<Integer> randomInts = Arrays.asList(1,2,3,4,5,6,7); //uniqueIntegers(10, 30);
         p("Wylosowano: "+randomInts);
         BST<Integer> bst = BST.ofComparable();
         randomInts.forEach(bst::add);
+        bst.balanceDSW();
         bst.visit(stringBuilderVisitor, Visitor.Order.INORDER);
         p("Ścieżka inorder:");
         p(stringBuilderVisitor.getResult());
@@ -18,6 +19,7 @@ public class Main {
         findNumber(bst);
         p("Maksimum: "+bst.maxNode().getValue());
         p("Minimum: "+bst.minNode().getValue());
+        bst.balanceDSW();
     }
 
     private static void p(String str){
